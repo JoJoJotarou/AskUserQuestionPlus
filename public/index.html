@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AskUserQuestionPlus - Claude Code TUI</title>
+    <style>
+      :root {
+        /* Dark Theme (Default) */
+        --bg-grad-start: #1a1a1a;
+        --bg-grad-end: #050505;
+        --surface-color: #161616;
+        --text-color: #e0e0e0;
+        --dim-color: #888888;
+        --purple-color: #bc80ff;
+        --green-color: #2fb07a;
+        --blue-color: #4da6ff;
+        --warn-color: #e2b714;
+        --selection-bg: #2a2a2a;
+        --tab-bg: #1a1a1a;
+        --tab-active-bg: #161616;
+        --border-color: #333;
+        --border-glow: rgba(188, 128, 255, 0.15);
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --font-family: "JetBrains Mono", "Menlo", "Monaco", "Courier New",
+          monospace;
+        --btn-disabled-bg: #333;
+        --btn-disabled-text: #666;
+      }
+
+      [data-theme="light"] {
+        --bg-grad-start: #e0e0e0;
+        --bg-grad-end: #ffffff;
+        --surface-color: #ffffff;
+        --text-color: #333333;
+        --dim-color: #666666;
+        --purple-color: #6f42c1;
+        --green-color: #22863a;
+        --blue-color: #0366d6;
+        --warn-color: #b08800;
+        --selection-bg: #f0f0f0;
+        --tab-bg: #e1e4e8;
+        --tab-active-bg: #ffffff;
+        --border-color: #d1d5da;
+        --border-glow: rgba(0, 0, 0, 0.05);
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --btn-disabled-bg: #e1e4e8;
+        --btn-disabled-text: #959da5;
+      }
+
+      * {
+        box-sizing: border-box;
+        outline: none;
+      }
+
+      body {
+        background: radial-gradient(
+          circle at center,
+          var(--bg-grad-start) 0%,
+          var(--bg-grad-end) 100%
+        );
+        color: var(--text-color);
+        font-family: var(--font-family);
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        line-height: 1.4;
+        font-size: 16px;
+        height: 100vh;
+        overflow: hidden;
+        transition: background 0.3s;
+      }
+
+      #app {
+        max-width: 1000px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 80vh;
+        max-height: 80vh;
+        border: 1px solid var(--border-color);
+        padding: 40px;
+        border-radius: 12px;
+        background: var(--surface-color);
+        box-shadow: 0 20px 50px var(--shadow-color), 0 0 20px var(--border-glow);
+        position: relative;
+        transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+      }
+
+      #app::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--purple-color),
+          transparent
+        );
+        border-radius: 12px 12px 0 0;
+        opacity: 0.5;
+      }
+
+      /* Header & Icons */
+      .header {
+        color: var(--dim-color);
+        font-size: 12px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+      }
+
+      .icon-btn {
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        color: var(--text-color);
+        text-decoration: none;
+        background: none;
+        border: none;
+        padding: 5px;
+      }
+
+      .icon-btn:hover {
+        opacity: 1;
+      }
+
+      /* Star Shine Animation */
+      .icon-btn:hover .star-icon {
+        animation: shine 1.5s infinite ease-in-out;
+        fill: var(--warn-color) !important;
+      }
+
+      /* Light mode specific star adjustment */
+      [data-theme="light"] .icon-btn:hover .star-icon {
+        fill: #ffb700 !important; /* Bright Golden Yellow */
+        filter: drop-shadow(
+          0 0 4px rgba(255, 183, 0, 0.6)
+        ); /* Add explicit glow */
+        animation: shine-light 1.5s infinite ease-in-out;
+      }
+
+      @keyframes shine {
+        0% {
+          filter: drop-shadow(0 0 0px var(--warn-color));
+          transform: scale(1);
+        }
+        50% {
+          filter: drop-shadow(0 0 5px var(--warn-color));
+          transform: scale(1.1);
+        }
+        100% {
+          filter: drop-shadow(0 0 0px var(--warn-color));
+          transform: scale(1);
+        }
+      }
+
+      @keyframes shine-light {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .icon-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+        transition: fill 0.2s;
+      }
+
+      /* Tabs Navigation */
+      .tabs-container {
+        display: flex;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+        -ms-overflow-style: none; /* Hide scrollbar IE/Edge */
+      }
+
+      .tabs-container::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari */
+      }
+
+      .tab-item {
+        padding: 8px 16px;
+        margin-right: 4px;
+        background: var(--tab-bg);
+        color: var(--dim-color);
+        cursor: pointer;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        font-size: 13px;
+        font-weight: bold;
+        transition: background 0.2s, color 0.2s;
+        white-space: nowrap;
+      }
+
+      .tab-item.active {
+        background: var(--surface-color);
+        color: var(--text-color);
+        border-bottom: 2px solid var(--purple-color);
+        margin-bottom: -1px;
+        border-top: 1px solid transparent;
+      }
+
+      .tab-number {
+        margin-right: 6px;
+        opacity: 0.7;
+      }
+
+      /* Question Container */
+      #current-question-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+        padding-right: 10px;
+      }
+
+      /* Review Mode Styles */
+      .review-block {
+        margin-bottom: 15px;
+        border: 1px solid transparent;
+        border-bottom: 1px dashed var(--border-color);
+        padding: 15px;
+        border-radius: 6px;
+        transition: background 0.15s, border-color 0.15s;
+      }
+
+      .review-block:hover {
+        background: var(--selection-bg);
+      }
+
+      /* Keyboard navigation active state */
+      .review-block.active-review {
+        background: var(--selection-bg);
+        border-color: var(--purple-color);
+        border-bottom: 1px solid var(--purple-color);
+      }
+
+      .review-header {
+        color: var(--dim-color);
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+
+      .review-question {
+        font-size: 15px;
+        margin-bottom: 8px;
+        color: var(--text-color);
+      }
+
+      .review-answer {
+        color: var(--green-color);
+        font-family: var(--font-family);
+        padding-left: 15px;
+        border-left: 2px solid var(--green-color);
+      }
+
+      .review-answer-item {
+        margin-bottom: 4px;
+      }
+
+      /* Question Block */
+      .question-header {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .q-text {
+        font-weight: bold;
+        flex: 1;
+        font-size: 1.1em;
+      }
+
+      /* Options Area */
+      .options-list {
+        padding-left: 0; /* Aligned with question text */
+      }
+
+      .option-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 12px;
+        margin: 4px 0;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: none;
+        border: 1px solid transparent;
+      }
+
+      .option-item.active {
+        background-color: var(--selection-bg);
+        border-color: var(--border-color);
+      }
+
+      .option-indicator {
+        margin-right: 12px;
+        font-weight: bold;
+        min-width: 20px;
+      }
+
+      .option-content {
+        flex: 1;
+      }
+
+      .option-label {
+        display: flex;
+        align-items: center;
+      }
+
+      .option-desc {
+        color: var(--dim-color);
+        font-size: 13px;
+        margin-top: 2px;
+      }
+
+      .recommended-tag {
+        color: var(--green-color);
+        font-size: 12px;
+        margin-left: 8px;
+        font-style: italic;
+      }
+
+      /* Multi-select indicators */
+      .checkbox-box {
+        color: var(--dim-color);
+        margin-right: 8px;
+      }
+      .checkbox-box.checked {
+        color: var(--green-color);
+      }
+
+      /* Other Input Area */
+      .other-input-wrapper {
+        margin-top: 12px;
+        display: none;
+      }
+
+      .other-input-wrapper.visible {
+        display: block;
+      }
+
+      .other-input {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--dim-color);
+        color: var(--blue-color);
+        font-family: var(--font-family);
+        width: 100%;
+        padding: 4px 0;
+        font-size: 14px;
+      }
+
+      .other-input:focus {
+        border-bottom-color: var(--blue-color);
+      }
+
+      /* Footer / Navigation Hints */
+      .footer {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .key-hints {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        flex: 1;
+      }
+
+      .key-hint-item {
+        font-size: 12px;
+        color: var(--dim-color);
+        display: flex;
+        align-items: center;
+      }
+
+      .key-tag {
+        background: #333;
+        color: #eee;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-right: 6px;
+        font-size: 11px;
+        font-family: inherit;
+      }
+
+      [data-theme="light"] .key-tag {
+        background: #e1e4e8;
+        color: #24292e;
+      }
+
+      .submit-btn {
+        background-color: var(--green-color);
+        color: white; /* Always white for readability on green */
+        border: none;
+        padding: 10px 24px;
+        font-family: var(--font-family);
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        transition: opacity 0.2s, background-color 0.2s;
+      }
+
+      [data-theme="light"] .submit-btn {
+        color: white;
+      }
+
+      .submit-btn:disabled {
+        background-color: var(--btn-disabled-bg);
+        color: var(--btn-disabled-text);
+        cursor: not-allowed;
+        opacity: 1; /* Reset opacity logic */
+      }
+
+      .submit-shortcut {
+        font-size: 11px;
+        opacity: 0.8;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+
+      .submit-btn:hover:not(:disabled) {
+        opacity: 0.9;
+      }
+
+      /* Selection specific icons */
+      .radio-dot {
+        color: var(--dim-color);
+        margin-right: 8px;
+      }
+      .radio-dot.checked {
+        color: var(--green-color);
+      }
+
+      /* Error Message in Review */
+      .error-msg {
+        color: #ff4d4f; /* Red */
+        font-size: 13px;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+      }
+
+      /* Custom Scrollbar for container */
+      #current-question-container::-webkit-scrollbar {
+        width: 8px;
+      }
+      #current-question-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #current-question-container::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 4px;
+      }
+      [data-theme="light"]
+        #current-question-container::-webkit-scrollbar-thumb {
+        background: #ccc;
+      }
+
+      /* Empty State */
+      #empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--dim-color);
+        text-align: center;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(188, 128, 255, 0.1);
+        border-top-color: var(--purple-color);
+        border-radius: 50%;
+        animation: spin 1s infinite linear;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="header">
+        <div style="display: flex; flex-direction: column">
+          <span style="font-weight: bold">AskUserQuestionPlus</span>
+          <span id="session-info" style="font-size: 11px; opacity: 0.7"
+            >Waiting for connection...</span
+          >
+        </div>
+
+        <div class="header-actions">
+          <!-- Theme Toggle -->
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">
+            <svg id="theme-icon" viewBox="0 0 24 24">
+              <path
+                d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.93c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42zm13.48 14.14c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42zM19.97 5.93c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42zM4.93 19.97c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42z"
+              />
+            </svg>
+          </div>
+
+          <!-- GitHub Star -->
+          <a
+            href="https://github.com/changjunjie/ask-user-question-plus"
+            target="_blank"
+            class="icon-btn"
+            title="Star on GitHub"
+          >
+            <svg class="star-icon" viewBox="0 0 16 16">
+              <path
+                fill-rule="evenodd"
+                d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"
+              ></path>
+            </svg>
+            <span style="font-size: 12px; font-weight: bold; margin-left: 4px"
+              >Star</span
+            >
+          </a>
+        </div>
+      </div>
+
+      <div class="tabs-container" id="tabs-container"></div>
+
+      <div id="current-question-container">
+        <div id="empty-state">
+          <div class="spinner"></div>
+          <p>Waiting ...</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="key-hints">
+          <div class="key-hint-item">
+            <span class="key-tag">↑↓</span> 选项/滚动
+          </div>
+          <div class="key-hint-item">
+            <span class="key-tag">← →/Tab</span> 切换问题
+          </div>
+          <div class="key-hint-item">
+            <span class="key-tag">Enter/Space</span>
+            <span id="space-hint-text"></span>
+          </div>
+        </div>
+        <button class="submit-btn" id="submit-all" disabled>
+          Go Submit
+          <span class="submit-shortcut" id="submit-shortcut-text">⌘+Enter</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // --- State ---
+      let QUESTIONS_DATA = [];
+      let answers = {};
+      let activeQuestionIndex = 0;
+      let activeOptionIndex = 0;
+      let activeReviewIndex = 0;
+      let shouldFocusOther = false;
+      let ws = null;
+      let sessionId =
+        new URLSearchParams(window.location.search).get("sessionId") ||
+        "default";
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
+      // --- WebSocket Logic ---
+      function connectWS() {
+        // Robust WS URL construction
+        let wsHost = window.location.host;
+        // If running locally but port is inferred/different, force 3456 for WS as per backend config
+        if (
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1"
+        ) {
+          // Assuming backend is always 3456 based on src/index.ts
+          wsHost = `${window.location.hostname}:3456`;
+        }
+
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${wsHost}/ws?sessionId=${sessionId}`;
+
+        console.error("Connecting to WS:", wsUrl);
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.error("WS Open");
+          document.getElementById(
+            "session-info"
+          ).textContent = `Session: ${sessionId} (Connected)`;
+          document.getElementById("session-info").style.color =
+            "var(--green-color)";
+          ws.send(JSON.stringify({ type: "GET_STATE" }));
+        };
+
+        ws.onerror = (err) => {
+          console.error("WS Error:", err);
+          document.getElementById(
+            "session-info"
+          ).textContent = `Connection Error. Check console.`;
+          document.getElementById("session-info").style.color = "#ff4d4f";
+        };
+
+        ws.onmessage = (event) => {
+          console.error("WS Message:", event.data);
+          try {
+            const message = JSON.parse(event.data);
+
+            if (
+              message.type === "SYNC_STATE" ||
+              message.type === "NEW_QUESTION"
+            ) {
+              const payload = message.payload;
+
+              const questions =
+                message.type === "SYNC_STATE" ? payload.activeData : payload;
+
+              if (questions && questions.length > 0) {
+                QUESTIONS_DATA = questions;
+                initAnswers();
+                activeQuestionIndex = 0;
+                activeOptionIndex = 0;
+                render();
+              } else {
+                QUESTIONS_DATA = [];
+                renderEmpty();
+              }
+            }
+          } catch (e) {
+            console.error("WS Message Error:", e);
+          }
+        };
+
+        ws.onclose = () => {
+          document.getElementById(
+            "session-info"
+          ).textContent = `Disconnected. Reconnecting...`;
+          setTimeout(connectWS, 2000);
+        };
+      }
+
+      function initAnswers() {
+        try {
+          answers = {};
+          QUESTIONS_DATA.forEach((q) => {
+            // No default selection
+            if (q.type === "single") {
+              answers[q.id] = { value: null, otherText: "" };
+            } else {
+              answers[q.id] = { values: [], otherText: "" };
+            }
+          });
+        } catch (e) {
+          console.error("Error init answers:", e);
+        }
+      }
+
+      // --- Render Functions ---
+      function renderEmpty() {
+        document.getElementById("tabs-container").innerHTML = "";
+        document.getElementById("current-question-container").innerHTML = `
+                <div id="empty-state">
+                    <div class="spinner"></div>
+                    <p>Waiting for Claude...</p>
+                </div>
+            `;
+        const submitBtn = document.getElementById("submit-all");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "WAITING...";
+      }
+
+      function renderTabs() {
+        const tabsContainer = document.getElementById("tabs-container");
+        const tabsHtml = QUESTIONS_DATA.map(
+          (q, idx) => `
+                <div id="tab-${idx}" class="tab-item ${
+            idx === activeQuestionIndex ? "active" : ""
+          }" onclick="switchToQuestion(${idx})">
+                    <span class="tab-number">${idx + 1}.</span>${q.header}
+                </div>
+            `
+        ).join("");
+
+        const isReviewActive = activeQuestionIndex === QUESTIONS_DATA.length;
+        const reviewTabHtml = `
+                <div id="tab-${QUESTIONS_DATA.length}" class="tab-item ${
+          isReviewActive ? "active" : ""
+        }" onclick="switchToQuestion(${QUESTIONS_DATA.length})">
+                    Submit
+                </div>
+            `;
+
+        tabsContainer.innerHTML = tabsHtml + reviewTabHtml;
+
+        // Scroll active tab into view
+        const activeTab = document.getElementById(`tab-${activeQuestionIndex}`);
+        if (activeTab) {
+          activeTab.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+        }
+      }
+
+      function renderQuestion() {
+        const container = document.getElementById("current-question-container");
+        if (activeQuestionIndex === QUESTIONS_DATA.length) {
+          renderReview();
+          return;
+        }
+
+        const q = QUESTIONS_DATA[activeQuestionIndex];
+        const currentAnswer = answers[q.id];
+
+        // Ensure an "Other" option exists for every question
+        const options = [...q.options];
+        if (!options.find((o) => o.isOther || o.value === "other")) {
+          options.push({
+            value: "other",
+            label: "Other",
+            description: "Custom input",
+            isOther: true,
+          });
+        }
+
+        const optionsHtml = options
+          .map((opt, oIdx) => {
+            const isActiveOption = oIdx === activeOptionIndex;
+            const isSelected =
+              q.type === "single"
+                ? currentAnswer.value === opt.value
+                : currentAnswer.values.includes(opt.value);
+
+            let indicator = "";
+            if (q.type === "single") {
+              indicator = isSelected
+                ? '<span class="radio-dot checked">●</span>'
+                : '<span class="radio-dot">○</span>';
+            } else {
+              indicator = isSelected
+                ? '<span class="checkbox-box checked">◉</span>'
+                : '<span class="checkbox-box">◯</span>';
+            }
+
+            const showOtherInput = opt.isOther && isSelected;
+
+            return `
+                    <div id="opt-${oIdx}" class="option-item ${
+              isActiveOption ? "active" : ""
+            }" 
+                         onclick="handleOptionClick(${activeQuestionIndex}, ${oIdx})">
+                        <div class="option-indicator">${indicator}</div>
+                        <div class="option-content">
+                            <div class="option-label">
+                                ${opt.label}
+                                ${
+                                  opt.recommended
+                                    ? '<span class="recommended-tag">（推荐）</span>'
+                                    : ""
+                                }
+                            </div>
+                            ${
+                              opt.description
+                                ? `<div class="option-desc">${opt.description}</div>`
+                                : ""
+                            }
+                            
+                            <div class="other-input-wrapper ${
+                              showOtherInput ? "visible" : ""
+                            }">
+                                <input type="text" 
+                                    class="other-input" 
+                                    id="input-${q.id}-${oIdx}"
+                                    placeholder="Please specify..." 
+                                    value="${currentAnswer.otherText}"
+                                    oninput="updateOtherText('${
+                                      q.id
+                                    }', this.value)"
+                                    onclick="event.stopPropagation()">
+                            </div>
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+
+        container.innerHTML = `
+                <div class="question-block">
+                    <div class="question-header">
+                        <span class="q-text">${q.text}${
+          q.type === "multiple"
+            ? ' <span style="color:var(--dim-color); font-size:0.8em">（可多选）</span>'
+            : ""
+        }</span>
+                    </div>
+                    <div class="options-list">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+
+        // Auto-scroll to active option
+        const activeEl = document.getElementById(`opt-${activeOptionIndex}`);
+        if (activeEl) {
+          activeEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        if (shouldFocusOther) {
+          const opt = options[activeOptionIndex];
+          if (opt.isOther) {
+            const inputEl = document.getElementById(
+              `input-${q.id}-${activeOptionIndex}`
+            );
+            if (inputEl) {
+              inputEl.focus();
+              const len = inputEl.value.length;
+              inputEl.setSelectionRange(len, len);
+            }
+          }
+          shouldFocusOther = false;
+        }
+      }
+
+      function renderReview() {
+        const container = document.getElementById("current-question-container");
+        const summaryHtml = QUESTIONS_DATA.map((q, idx) => {
+          const ans = answers[q.id];
+          let displayValue = "";
+          let error = null;
+          const isActive = idx === activeReviewIndex;
+
+          if (q.type === "single") {
+            if (!ans.value) {
+              error = "未选择答案";
+            } else {
+              const opt = [
+                ...q.options,
+                { value: "other", label: "Other", isOther: true },
+              ].find((o) => o.value === ans.value);
+              if (opt) {
+                displayValue = opt.label;
+                if (opt.isOther) {
+                  if (!ans.otherText.trim()) {
+                    error = "请填写自定义内容";
+                    displayValue += ": [Empty]";
+                  } else {
+                    displayValue += `: ${ans.otherText}`;
+                  }
+                }
+              }
+            }
+          } else {
+            if (!ans.values || ans.values.length === 0) {
+              error = "请至少选择一项";
+            } else {
+              displayValue = ans.values
+                .map((v) => {
+                  const opt = [
+                    ...q.options,
+                    { value: "other", label: "Other", isOther: true },
+                  ].find((o) => o.value === v);
+                  if (!opt) return v;
+                  let label = opt.label;
+                  if (opt.isOther) {
+                    if (!ans.otherText.trim()) {
+                      error = "请填写自定义内容";
+                      label += ": [Empty]";
+                    } else {
+                      label += `: ${ans.otherText}`;
+                    }
+                  }
+                  return `<div class="review-answer-item">• ${label}</div>`;
+                })
+                .join("");
+            }
+          }
+
+          return `
+                    <div id="review-item-${idx}" class="review-block ${
+            isActive ? "active-review" : ""
+          }" 
+                         onclick="switchToQuestion(${idx})" 
+                         style="cursor:pointer">
+                        <div class="review-header">${q.header}</div>
+                        <div class="review-question">${q.text}</div>
+                        ${
+                          error
+                            ? `<div class="error-msg">⚠ ${error}</div>`
+                            : `<div class="review-answer">${displayValue}</div>`
+                        }
+                    </div>
+                `;
+        }).join("");
+
+        container.innerHTML = `
+                <div class="question-block">
+                    <div class="question-header">
+                        <span class="q-text">请检查您的回答，确认无误后提交！</span>
+                    </div>
+                    ${summaryHtml}
+                </div>
+            `;
+
+        const activeBlock = document.getElementById(
+          `review-item-${activeReviewIndex}`
+        );
+        if (activeBlock) {
+          activeBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+
+      function updateFooterButton() {
+        const submitBtn = document.getElementById("submit-all");
+        const spaceHint = document.getElementById("space-hint-text");
+        const isReview = activeQuestionIndex === QUESTIONS_DATA.length;
+        const isValid = validateAll();
+        const shortcutText = isMac ? "⌘+Enter" : "Ctrl+Enter";
+
+        if (isReview) {
+          submitBtn.innerHTML = `Submt Answers <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
+          submitBtn.disabled = !isValid;
+          if (spaceHint) spaceHint.textContent = "跳转";
+        } else {
+          submitBtn.innerHTML = `Go Submit <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
+          submitBtn.disabled = QUESTIONS_DATA.length === 0;
+          if (spaceHint) spaceHint.textContent = "选择";
+        }
+      }
+
+      function render() {
+        if (QUESTIONS_DATA.length === 0) {
+          renderEmpty();
+          return;
+        }
+        renderTabs();
+        renderQuestion();
+        updateFooterButton();
+      }
+
+      // --- Event Handlers ---
+      function toggleTheme() {
+        const body = document.body;
+        const isLight = body.getAttribute("data-theme") === "light";
+        if (isLight) {
+          body.removeAttribute("data-theme");
+          document.getElementById("theme-icon").innerHTML =
+            '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.93c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42zm13.48 14.14c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.42-1.42zM19.97 5.93c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42zM4.93 19.97c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.42-1.42c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.42 1.42z"/>';
+        } else {
+          body.setAttribute("data-theme", "light");
+          document.getElementById("theme-icon").innerHTML =
+            '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+        }
+      }
+
+      function switchToQuestion(idx) {
+        activeQuestionIndex = idx;
+        activeOptionIndex = 0;
+        if (idx === QUESTIONS_DATA.length) {
+          activeReviewIndex = 0;
+        }
+        render();
+      }
+
+      function handleOptionClick(qIdx, oIdx) {
+        activeQuestionIndex = qIdx;
+        activeOptionIndex = oIdx;
+        toggleSelection(qIdx, oIdx);
+      }
+
+      function toggleSelection(qIdx, oIdx) {
+        const q = QUESTIONS_DATA[qIdx];
+        const ans = answers[q.id];
+
+        const options = [...q.options];
+        if (!options.find((o) => o.isOther || o.value === "other")) {
+          options.push({ value: "other", label: "Other", isOther: true });
+        }
+        const opt = options[oIdx];
+
+        if (q.type === "single") {
+          ans.value = opt.value;
+          // Auto advance for single choice if not "Other"
+          if (!opt.isOther) {
+            setTimeout(() => {
+              const totalTabs = QUESTIONS_DATA.length + 1;
+              activeQuestionIndex = (activeQuestionIndex + 1) % totalTabs;
+              switchToQuestion(activeQuestionIndex);
+            }, 200);
+          }
+        } else {
+          const idx = ans.values.indexOf(opt.value);
+          if (idx > -1) {
+            ans.values.splice(idx, 1);
+          } else {
+            ans.values.push(opt.value);
+          }
+        }
+
+        if (opt.isOther) {
+          const isSelected =
+            q.type === "single"
+              ? ans.value === opt.value
+              : ans.values.includes(opt.value);
+
+          if (isSelected) {
+            shouldFocusOther = true;
+          }
+        }
+
+        render();
+      }
+
+      function updateOtherText(qId, text) {
+        answers[qId].otherText = text;
+        updateFooterButton();
+      }
+
+      function validateAll() {
+        for (const q of QUESTIONS_DATA) {
+          const ans = answers[q.id];
+          if (q.type === "single") {
+            if (!ans.value) return false;
+            if (ans.value === "other" && !ans.otherText.trim()) return false;
+          } else {
+            if (!ans.values || ans.values.length === 0) return false;
+            if (ans.values.includes("other") && !ans.otherText.trim())
+              return false;
+          }
+        }
+        return true;
+      }
+
+      function handleSubmitAction() {
+        const isReview = activeQuestionIndex === QUESTIONS_DATA.length;
+        if (isReview) {
+          if (!validateAll()) return;
+
+          ws.send(
+            JSON.stringify({
+              type: "SUBMIT_ANSWERS",
+              payload: { answers },
+            })
+          );
+
+          const submitBtn = document.getElementById("submit-all");
+          submitBtn.textContent = "SUBMITTING...";
+          submitBtn.disabled = true;
+
+          setTimeout(() => {
+            alert("提交成功！即将关闭...");
+            submitBtn.textContent = "DONE";
+            window.close();
+            document.body.innerHTML =
+              '<div style="color:var(--text-color); font-family:var(--font-family); display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;"><h1>Answers Submitted</h1><p>You can now return to Claude Code CLI and close this tab.</p></div>';
+          }, 500);
+        } else {
+          switchToQuestion(QUESTIONS_DATA.length);
+        }
+      }
+
+      document
+        .getElementById("submit-all")
+        .addEventListener("click", handleSubmitAction);
+
+      document.addEventListener("keydown", (e) => {
+        if (QUESTIONS_DATA.length === 0) return;
+
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          handleSubmitAction();
+          return;
+        }
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement.tagName === "INPUT";
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const totalTabs = QUESTIONS_DATA.length + 1;
+          if (e.shiftKey)
+            activeQuestionIndex =
+              (activeQuestionIndex - 1 + totalTabs) % totalTabs;
+          else activeQuestionIndex = (activeQuestionIndex + 1) % totalTabs;
+          switchToQuestion(activeQuestionIndex);
+          return;
+        }
+        if (
+          (e.key === "ArrowRight" || e.key === "ArrowLeft") &&
+          !isInputFocused
+        ) {
+          e.preventDefault();
+          const totalTabs = QUESTIONS_DATA.length + 1;
+          if (e.key === "ArrowRight")
+            activeQuestionIndex = (activeQuestionIndex + 1) % totalTabs;
+          else
+            activeQuestionIndex =
+              (activeQuestionIndex - 1 + totalTabs) % totalTabs;
+          switchToQuestion(activeQuestionIndex);
+          return;
+        }
+        if (activeQuestionIndex === QUESTIONS_DATA.length) {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            activeReviewIndex = (activeReviewIndex + 1) % QUESTIONS_DATA.length;
+            renderReview();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            activeReviewIndex =
+              (activeReviewIndex - 1 + QUESTIONS_DATA.length) %
+              QUESTIONS_DATA.length;
+            renderReview();
+          } else if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            switchToQuestion(activeReviewIndex);
+          }
+          return;
+        }
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          const q = QUESTIONS_DATA[activeQuestionIndex];
+          const optCount =
+            q.options.length +
+            (q.options.find((o) => o.isOther || o.value === "other") ? 0 : 1);
+          if (e.key === "ArrowDown")
+            activeOptionIndex = (activeOptionIndex + 1) % optCount;
+          else
+            activeOptionIndex = (activeOptionIndex - 1 + optCount) % optCount;
+          if (isInputFocused) activeElement.blur();
+          render();
+          return;
+        }
+        if ((e.key === " " || e.key === "Enter") && !isInputFocused) {
+          e.preventDefault();
+          toggleSelection(activeQuestionIndex, activeOptionIndex);
+          return;
+        }
+      });
+
+      connectWS();
+    </script>
+  </body>
+</html>

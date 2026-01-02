@@ -1,0 +1,51 @@
+{
+  "name": "ask-user-question-plus",
+  "version": "1.0.0",
+  "description": "A TUI-style MCP server for asking user questions via a web interface.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ask-user-question-plus": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "codex",
+    "gemini-cli",
+    "AskUserQuestion"
+  ],
+  "author": "JoJoJotarou",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoJoJotarou/AskUserQuestionPlus.git"
+  },
+  "homepage": "https://github.com/JoJoJotarou/AskUserQuestionPlus#readme",
+  "bugs": {
+    "url": "https://github.com/JoJoJotarou/AskUserQuestionPlus/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.1",
+    "open": "^10.1.0",
+    "uuid": "^11.0.3",
+    "ws": "^8.18.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

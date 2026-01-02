@@ -1,0 +1,68 @@
+# Source files
+src/
+tsconfig.json
+
+# Development tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Tests
+tests/
+*.test.ts
+*.spec.ts
+coverage/
+
+# Documentation images
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Logs
+*.log
+server.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Environment
+.env
+.env.*
+
+# IDE
+.DS_Store
+Thumbs.db
+
+# npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Claude
+.claude/
+
+# Build cache
+node_modules/
+.cache/
+
+# Misc
+*.md.backup
+TODO.md
+NOTES.md
+
+# Docker
+*.docker*
+docker-compose.yml
+Dockerfile
+
+assets/
