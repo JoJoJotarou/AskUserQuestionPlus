@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -545,7 +545,7 @@
 
           <!-- GitHub Star -->
           <a
-            href="https://github.com/changjunjie/ask-user-question-plus"
+            href="https://github.com/JoJoJotarou/AskUserQuestionPlus"
             target="_blank"
             class="icon-btn"
             title="Star on GitHub"
@@ -575,10 +575,10 @@
       <div class="footer">
         <div class="key-hints">
           <div class="key-hint-item">
-            <span class="key-tag">↑↓</span> 选项/滚动
+            <span class="key-tag">↑↓</span> Select/Scroll
           </div>
           <div class="key-hint-item">
-            <span class="key-tag">← →/Tab</span> 切换问题
+            <span class="key-tag">← →/Tab</span> Switch
           </div>
           <div class="key-hint-item">
             <span class="key-tag">Enter/Space</span>
@@ -586,7 +586,7 @@
           </div>
         </div>
         <button class="submit-btn" id="submit-all" disabled>
-          Go Submit
+          Review & Submit
           <span class="submit-shortcut" id="submit-shortcut-text">⌘+Enter</span>
         </button>
       </div>
@@ -799,7 +799,7 @@
                                 ${opt.label}
                                 ${
                                   opt.recommended
-                                    ? '<span class="recommended-tag">（推荐）</span>'
+                                    ? '<span class="recommended-tag">(Recommended)</span>'
                                     : ""
                                 }
                             </div>
@@ -833,7 +833,7 @@
                     <div class="question-header">
                         <span class="q-text">${q.text}${
           q.type === "multiple"
-            ? ' <span style="color:var(--dim-color); font-size:0.8em">（可多选）</span>'
+            ? ' <span style="color:var(--dim-color); font-size:0.8em">(Multi-select)</span>'
             : ""
         }</span>
                     </div>
@@ -875,7 +875,7 @@
 
           if (q.type === "single") {
             if (!ans.value) {
-              error = "未选择答案";
+              error = "No answer selected";
             } else {
               const opt = [
                 ...q.options,
@@ -885,7 +885,7 @@
                 displayValue = opt.label;
                 if (opt.isOther) {
                   if (!ans.otherText.trim()) {
-                    error = "请填写自定义内容";
+                    error = "Please provide custom input";
                     displayValue += ": [Empty]";
                   } else {
                     displayValue += `: ${ans.otherText}`;
@@ -895,7 +895,7 @@
             }
           } else {
             if (!ans.values || ans.values.length === 0) {
-              error = "请至少选择一项";
+              error = "Please select at least one option";
             } else {
               displayValue = ans.values
                 .map((v) => {
@@ -907,7 +907,7 @@
                   let label = opt.label;
                   if (opt.isOther) {
                     if (!ans.otherText.trim()) {
-                      error = "请填写自定义内容";
+                      error = "Please provide custom input";
                       label += ": [Empty]";
                     } else {
                       label += `: ${ans.otherText}`;
@@ -939,7 +939,7 @@
         container.innerHTML = `
                 <div class="question-block">
                     <div class="question-header">
-                        <span class="q-text">请检查您的回答，确认无误后提交！</span>
+                        <span class="q-text">Please review your answers before submitting!</span>
                     </div>
                     ${summaryHtml}
                 </div>
@@ -961,13 +961,13 @@
         const shortcutText = isMac ? "⌘+Enter" : "Ctrl+Enter";
 
         if (isReview) {
-          submitBtn.innerHTML = `Submt Answers <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
+          submitBtn.innerHTML = `Submit Answers <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
           submitBtn.disabled = !isValid;
-          if (spaceHint) spaceHint.textContent = "跳转";
+          if (spaceHint) spaceHint.textContent = "Jump";
         } else {
-          submitBtn.innerHTML = `Go Submit <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
+          submitBtn.innerHTML = `Review & Submit <span class="submit-shortcut" id="submit-shortcut-text">${shortcutText}</span>`;
           submitBtn.disabled = QUESTIONS_DATA.length === 0;
-          if (spaceHint) spaceHint.textContent = "选择";
+          if (spaceHint) spaceHint.textContent = "Select";
         }
       }
 
@@ -1091,7 +1091,7 @@
           submitBtn.disabled = true;
 
           setTimeout(() => {
-            alert("提交成功！即将关闭...");
+            alert("Submitted successfully! Closing...");
             submitBtn.textContent = "DONE";
             window.close();
             document.body.innerHTML =

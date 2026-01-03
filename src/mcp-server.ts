@@ -35,43 +35,43 @@ export class MCPServerService {
       "ask_user_question_plus",
       {
         description:
-          "一个基于 MCP 的用户交互工具，用于向用户提出结构化问题并收集反馈。该工具支持单选、多选类型的问题，允许标记推荐选项，并支持任意数量的问题与答案选项。前端会自动为每个问题添加 'Other'（自定义输入）选项，适用于复杂配置与决策流程。",
+          "An MCP-based user interaction tool for asking structured questions and collecting feedback. It supports single-choice and multiple-choice questions, marking recommended options, and flexible numbers of questions and options. An 'Other' (custom input) option is automatically added to each question, making it suitable for complex configuration and decision-making workflows.",
         inputSchema: {
           questions: z
             .array(
               z.object({
-                id: z.string().describe("问题唯一标识"),
+                id: z.string().describe("Unique identifier for the question"),
                 header: z
                   .string()
                   .max(12)
-                  .describe("问题标题（最多 12 个字符）"),
-                text: z.string().describe("问题文本"),
+                  .describe("Short header for the question tab (max 12 chars)"),
+                text: z.string().describe("Main text of the question"),
                 type: z
                   .enum(["single", "multiple"])
-                  .describe("问题类型：single（单选）或 multiple（多选）"),
+                  .describe("Question type: 'single' or 'multiple'"),
                 options: z
                   .array(
                     z.object({
-                      value: z.string().describe("选项值"),
-                      label: z.string().describe("选项标签"),
+                      value: z.string().describe("Technical value of the option"),
+                      label: z.string().describe("Display label for the option"),
                       description: z
                         .string()
                         .optional()
-                        .describe("选项描述（可选）"),
+                        .describe("Additional description for the option"),
                       recommended: z
                         .boolean()
                         .optional()
-                        .describe("是否为推荐选项（可选）"),
+                        .describe("Whether this is a recommended option"),
                     })
                   )
                   .describe(
-                    "选项列表（不限数量）。注意：前端会自动添加 'Other'（自定义输入）选项，用户可自定义输入。"
+                    "List of options. Note: An 'Other' option is automatically added for custom user input."
                   ),
               })
             )
             .min(1)
             .max(20)
-            .describe("问题列表（最多可支持 20 个问题）"),
+            .describe("List of questions (up to 20 items)"),
         },
       },
       async ({ questions }) => {
