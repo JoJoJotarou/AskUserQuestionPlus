@@ -60,6 +60,9 @@ pm2 start "npx ask-user-question-plus -- --port=3456 --timeout=600000" --name as
 
 # 停止服务
 pm2 stop ask-user-question-plus-service
+
+# Windows
+pm2 start cmd --name ask-user-question-plus-service -- /c npx ask-user-question-plus
 ```
 
 #### 使用 Docker
@@ -268,6 +271,9 @@ pm2 start "npx ask-user-question-plus -- --port=3456 --timeout=600000" --name as
 
 # Stop service
 pm2 stop ask-user-question-plus-service
+
+# Windows
+pm2 start cmd --name ask-user-question-plus-service -- /c npx ask-user-question-plu
 ```
 
 #### Using Docker
