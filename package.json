@@ -1,6 +1,6 @@
 {
   "name": "ask-user-question-plus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A TUI-style MCP server for asking user questions via a web interface.",
   "type": "module",
   "main": "dist/index.js",
