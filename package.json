@@ -11,6 +11,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "test": "echo 'No tests yet' && exit 0",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
