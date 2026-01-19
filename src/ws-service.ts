@@ -60,6 +60,12 @@ export class WebSocketService {
       session.timeout = null;
     }
 
+    // Send session meta first so the client can start countdown when it receives NEW_QUESTION.
+    this.sendMessage(ws, {
+      type: "SESSION_META",
+      payload: { timeoutMs: this.sessionTimeoutMs },
+    });
+
     // Send questions to client
     this.sendMessage(ws, {
       type: "NEW_QUESTION",

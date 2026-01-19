@@ -601,10 +601,56 @@
       let activeReviewIndex = 0;
       let shouldFocusOther = false;
       let ws = null;
+      let sessionTimeoutMs = null;
+      let countdownInterval = null;
+      let countdownEndsAt = null;
+      let hasReceivedQuestions = false;
       let sessionId =
         new URLSearchParams(window.location.search).get("sessionId") ||
         "default";
       const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
+      function formatMmSs(ms) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function setSessionInfo(statusText) {
+        document.getElementById("session-info").textContent = statusText;
+      }
+
+      function setSessionInfoConnected() {
+        const base = `Session: ${sessionId} (Connected)`;
+        if (countdownEndsAt) {
+          const remaining = countdownEndsAt - Date.now();
+          setSessionInfo(`${base}  | Timeout in ${formatMmSs(remaining)}`);
+        } else {
+          setSessionInfo(base);
+        }
+      }
+
+      function stopCountdown() {
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+        countdownEndsAt = null;
+      }
+
+      function startCountdown(timeoutMs) {
+        stopCountdown();
+        countdownEndsAt = Date.now() + timeoutMs;
+
+        // Tick immediately to avoid showing stale text for up to 1s.
+        setSessionInfoConnected();
+        countdownInterval = setInterval(() => {
+          const remaining = countdownEndsAt - Date.now();
+          setSessionInfoConnected();
+          if (remaining <= 0) stopCountdown();
+        }, 1000);
+      }
 
       // --- WebSocket Logic ---
       function connectWS() {
@@ -628,9 +674,7 @@
 
         ws.onopen = () => {
           console.error("WS Open");
-          document.getElementById(
-            "session-info"
-          ).textContent = `Session: ${sessionId} (Connected)`;
+          setSessionInfoConnected();
           document.getElementById("session-info").style.color =
             "var(--green-color)";
           ws.send(JSON.stringify({ type: "GET_STATE" }));
@@ -649,6 +693,19 @@
           try {
             const message = JSON.parse(event.data);
 
+            if (message.type === "SESSION_META" && message.payload) {
+              sessionTimeoutMs =
+                typeof message.payload.timeoutMs === "number"
+                  ? message.payload.timeoutMs
+                  : null;
+
+              // For B: start countdown when we have received the questions.
+              if (hasReceivedQuestions && sessionTimeoutMs) {
+                startCountdown(sessionTimeoutMs);
+              }
+              return;
+            }
+
             if (
               message.type === "SYNC_STATE" ||
               message.type === "NEW_QUESTION"
@@ -660,6 +717,8 @@
 
               if (questions && questions.length > 0) {
                 QUESTIONS_DATA = questions;
+                hasReceivedQuestions = true;
+                if (sessionTimeoutMs) startCountdown(sessionTimeoutMs);
                 initAnswers();
                 activeQuestionIndex = 0;
                 activeOptionIndex = 0;
@@ -675,6 +734,7 @@
         };
 
         ws.onclose = () => {
+          stopCountdown();
           document.getElementById(
             "session-info"
           ).textContent = `Disconnected. Reconnecting...`;
