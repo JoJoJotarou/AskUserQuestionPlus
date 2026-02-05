@@ -84,23 +84,18 @@ claude mcp add -s user -t http AskUserQuestionPlus http://localhost:3456/mcp
 在 `~/.codex/config.toml` 中添加配置：
 
 ```toml
-experimental_use_rmcp_client = true
-
 [mcp_servers.AskUserQuestionPlus]
 url = "http://localhost:3456/mcp/"
 ```
 
 或者使用命令行：
 
-在 `~/.codex/config.toml` 中添加配置：
-
-```toml
-experimental_use_rmcp_client = true
-```
-
 ```bash
 codex mcp add AskUserQuestionsPlus --url http://localhost:3456/mcp/
 ```
+
+> - ~~[[MCP] Add support for streamable HTTP MCP servers](https://github.com/openai/codex/pull/4317)~~
+> - ~~[Replace experimental_use_rmcp_client with [features].rmcp_client](https://github.com/openai/codex/issues/6995)~~
 
 ### Gemini CLI
 
@@ -108,10 +103,10 @@ codex mcp add AskUserQuestionsPlus --url http://localhost:3456/mcp/
 gemini mcp add AskUserQuestionPlus http://localhost:3456/mcp -s user --transport http
 ```
 
-> **⚠️ 注意**：如果遇到 `[Error: Unrecognized key(s) in object: 'type']` 错误 (参见 [issue #15449](https://github.com/google-gemini/gemini-cli/issues/15449))：
+> ~~**⚠️ 注意**：如果遇到 `[Error: Unrecognized key(s) in object: 'type']` 错误 (参见 [issue #15449](https://github.com/google-gemini/gemini-cli/issues/15449))：~~
 >
-> - 请在 `~/.gemini/settings.json` 中删除 `type` 字段
-> - 或等待 gemini cli `v0.23.0` 发布
+> - ~~请在 `~/.gemini/settings.json` 中删除 `type` 字段~~
+> - ~~或等待 gemini cli `v0.23.0` 发布~~
 
 ## 🕹️ 使用方法
 
@@ -295,23 +290,18 @@ claude mcp add -s user -t http AskUserQuestionPlus http://localhost:3456/mcp
 Add to `~/.codex/config.toml`:
 
 ```toml
-experimental_use_rmcp_client = true
-
 [mcp_servers.AskUserQuestionPlus]
 url = "http://localhost:3456/mcp/"
 ```
 
 Or via CLI:
 
-Add to `~/.codex/config.toml` first:
-
-```toml
-experimental_use_rmcp_client = true
-```
-
 ```bash
 codex mcp add AskUserQuestionsPlus --url http://localhost:3456/mcp/
 ```
+
+> - ~~[[MCP] Add support for streamable HTTP MCP servers](https://github.com/openai/codex/pull/4317)~~
+> - ~~[Replace experimental_use_rmcp_client with [features].rmcp_client](https://github.com/openai/codex/issues/6995)~~
 
 ### Gemini CLI
 
@@ -319,10 +309,10 @@ codex mcp add AskUserQuestionsPlus --url http://localhost:3456/mcp/
 gemini mcp add AskUserQuestionPlus http://localhost:3456/mcp -s user --transport http
 ```
 
-> **⚠️ Note**: If you encounter `[Error: Unrecognized key(s) in object: 'type']` ([Issue #15449](https://github.com/google-gemini/gemini-cli/issues/15449)):
+> ~~**⚠️ Note**: If you encounter `[Error: Unrecognized key(s) in object: 'type']` ([Issue #15449](https://github.com/google-gemini/gemini-cli/issues/15449)):~~
 >
-> - Remove the `type` field in `~/.gemini/settings.json`.
-> - Or wait for gemini cli `v0.23.0`.
+> - ~~Remove the `type` field in `~/.gemini/settings.json`.~~
+> - ~~Or wait for gemini cli `v0.23.0`.~~
 
 ## 🕹️ Usage
 
